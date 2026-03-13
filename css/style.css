@@ -1,0 +1,234 @@
+:root {
+  --bg-main: #f5f7fb;
+  --bg-card: #ffffff;
+  --text-main: #1f2937;
+  --text-soft: #6b7280;
+  --border-color: #e5e7eb;
+  --shadow-soft: 0 10px 30px rgba(15, 23, 42, 0.06);
+  --primary-grad: linear-gradient(135deg, #4f46e5, #06b6d4);
+}
+
+body.dark-mode {
+  --bg-main: #111827;
+  --bg-card: #1f2937;
+  --text-main: #f9fafb;
+  --text-soft: #9ca3af;
+  --border-color: #374151;
+  --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+body {
+  background: var(--bg-main);
+  color: var(--text-main);
+  font-family: Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+}
+
+.navbar,
+.card,
+.modal-content,
+.table,
+.form-control,
+.form-select,
+.dropdown-menu,
+.list-group-item,
+.btn,
+.app-footer {
+  transition: 0.25s ease;
+}
+
+.app-navbar {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border-color);
+}
+
+body.dark-mode .app-navbar {
+  background: rgba(17, 24, 39, 0.88);
+}
+
+.navbar-brand,
+.nav-link,
+.page-title,
+h1, h2, h3, h4, h5, h6,
+.table,
+.form-label,
+.modal-title {
+  color: var(--text-main) !important;
+}
+
+.nav-link {
+  border-radius: 10px;
+  padding: 0.55rem 0.95rem !important;
+}
+
+.nav-link.active,
+.nav-link:hover {
+  background: rgba(79, 70, 229, 0.12);
+}
+
+.app-card,
+.stat-card,
+.modal-content,
+.notification-menu {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 18px;
+  box-shadow: var(--shadow-soft);
+}
+
+.stat-card {
+  background: var(--primary-grad);
+  color: #fff;
+  border: none;
+}
+
+.stat-card .stat-label,
+.stat-card h3 {
+  color: #fff !important;
+}
+
+.stat-label {
+  font-size: 0.95rem;
+  margin-bottom: 0.4rem;
+  opacity: 0.9;
+}
+
+.btn-primary {
+  background: var(--primary-grad);
+  border: none;
+}
+
+.btn-primary:hover {
+  opacity: 0.92;
+}
+
+.btn-icon {
+  width: 42px;
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-main);
+}
+
+.date-box,
+.info-chip {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  padding: 0.8rem 1rem;
+  border-radius: 14px;
+  box-shadow: var(--shadow-soft);
+  color: var(--text-main);
+}
+
+.form-control,
+.form-select {
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-main);
+  padding: 0.75rem 0.9rem;
+}
+
+.form-control::placeholder {
+  color: var(--text-soft);
+}
+
+.table {
+  --bs-table-bg: transparent;
+  --bs-table-color: var(--text-main);
+  margin-bottom: 0;
+}
+
+.table thead th {
+  color: var(--text-soft);
+  font-weight: 600;
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+
+.table td {
+  border-color: var(--border-color);
+}
+
+.badge-soft {
+  background: rgba(79, 70, 229, 0.12);
+  color: #4338ca;
+  padding: 0.45rem 0.7rem;
+  border-radius: 999px;
+}
+
+body.dark-mode .badge-soft {
+  color: #c7d2fe;
+}
+
+.notification-menu {
+  width: 340px;
+}
+
+.notification-list {
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.notification-item {
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.notification-item:last-child {
+  border-bottom: 0;
+}
+
+.notification-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-size: 0.65rem;
+}
+
+.list-group-item {
+  background: transparent;
+  color: var(--text-main);
+  border-color: var(--border-color);
+}
+
+.progress {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(107, 114, 128, 0.2);
+}
+
+.progress-bar {
+  border-radius: 999px;
+}
+
+.app-footer {
+  border-top: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-soft);
+}
+
+.empty-state {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-soft);
+}
+
+canvas {
+  max-width: 100%;
+}
+
+.text-secondary {
+  color: var(--text-soft) !important;
+}
+
+@media (max-width: 991px) {
+  .notification-menu {
+    width: 100%;
+  }
+}
