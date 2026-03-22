@@ -1,18 +1,21 @@
 // Budget page - handles budget features
 
+function getBudgetStatus(spent, limit) {
+  const percentage = Math.min((spent / limit) * 100, 100);
+  if (spent >= limit) return { status: 'Exceeded', progressClass: 'bg-danger', badgeClass: 'text-bg-danger', percentage };
+  if (percentage >= 80) return { status: 'Warning', progressClass: 'bg-warning', badgeClass: 'text-bg-warning', percentage };
+  return { status: 'On Track', progressClass: 'bg-success', badgeClass: 'text-bg-success', percentage };
+}
+
 // Show the budget page and set up event listeners
 function renderBudgetPage() {
-  // Fill category dropdown
   populateCategoryOptions();
-  // Show budget cards
   renderBudgetCards();
+  checkAndNotifyBudgetExceeded();
 
-  // When user types in search, update cards
-  document.getElementById('budgetSearch').addEventListener('input', renderBudgetCards);
-  // When user clicks to add new budget, reset form
-  document.getElementById('openBudgetModalBtn').addEventListener('click', resetBudgetForm);
-  // When user submits budget form, save budget
-  document.getElementById('budgetForm').addEventListener('submit', saveBudget);
+  document.getElementById('budgetSearch')?.addEventListener('input', renderBudgetCards);
+  document.getElementById('openBudgetModalBtn')?.addEventListener('click', resetBudgetForm);
+  document.getElementById('budgetForm')?.addEventListener('submit', saveBudget);
 }
 
 // Calculate how much is spent for a category
@@ -27,33 +30,23 @@ function renderBudgetCards() {
   const container = document.getElementById('budgetCardContainer');
   if (!container) return;
 
-  // Get search text
   const search = document.getElementById('budgetSearch')?.value.toLowerCase() || '';
-  // Filter budgets by search
   const budgets = getBudgets().filter(item => item.category.toLowerCase().includes(search));
 
-  // If no budgets, show empty state
   if (!budgets.length) {
     container.innerHTML = '<div class="col-12"><div class="card app-card"><div class="empty-state">No budgets found.</div></div></div>';
     return;
   }
 
-  // Show each budget card
-  container.innerHTML = budgets.map(item => {
-    const spent = getBudgetSpent(item.category);
-    const remaining = item.limit - spent;
-    const percentage = Math.min((spent / item.limit) * 100, 100);
-    let status = 'On Track';
-    let progressClass = 'bg-success';
+  const spentByCategory = getExpenses().reduce((totals, item) => {
+    totals[item.category] = (totals[item.category] || 0) + Number(item.amount);
+    return totals;
+  }, {});
 
-    // If spent more than limit, show warning
-    if (spent >= item.limit) {
-      status = 'Exceeded';
-      progressClass = 'bg-danger';
-    } else if (percentage >= 80) {
-      status = 'Warning';
-      progressClass = 'bg-warning';
-    }
+  container.innerHTML = budgets.map(item => {
+    const spent = spentByCategory[item.category] || 0;
+    const remaining = item.limit - spent;
+    const { status, progressClass, badgeClass, percentage } = getBudgetStatus(spent, item.limit);
 
     return `
       <div class="col-lg-6">
@@ -73,7 +66,7 @@ function renderBudgetCards() {
             <div class="mb-2">Spent: <strong>${formatCurrency(spent)}</strong></div>
             <div class="mb-3">Remaining: <strong>${formatCurrency(remaining)}</strong></div>
             <div class="progress mb-3"><div class="progress-bar ${progressClass}" style="width:${percentage}%"></div></div>
-            <span class="badge ${status === 'Exceeded' ? 'text-bg-danger' : status === 'Warning' ? 'text-bg-warning' : 'text-bg-success'}">${status}</span>
+            <span class="badge ${badgeClass}">${status}</span>
           </div>
         </div>
       </div>
@@ -87,7 +80,7 @@ function resetBudgetForm() {
   document.getElementById('budgetModalTitle').textContent = 'Add Budget';
 }
 
-function saveBudget(event) {
+async function saveBudget(event) {
   event.preventDefault();
 
   const id = Number(document.getElementById('budgetId').value);
@@ -112,11 +105,21 @@ function saveBudget(event) {
     ? budgets.map(item => item.id === id ? budgetData : item)
     : [...budgets, budgetData];
 
-  setData(STORAGE_KEYS.budgets, updatedBudgets);
-  addNotification(id ? 'Budget updated successfully.' : `Budget added for ${category}.`);
-  bootstrap.Modal.getInstance(document.getElementById('budgetModal')).hide();
-  resetBudgetForm();
-  renderBudgetCards();
+  const previousBudgets = getBudgets();
+  const previousNotifications = getNotifications();
+  syncRuntimeData(STORAGE_KEYS.budgets, updatedBudgets);
+
+  try {
+    await setData(STORAGE_KEYS.budgets, updatedBudgets);
+    addNotification(id ? 'Budget updated successfully.' : `Budget added for ${category}.`);
+    hideModalSafely('budgetModal');
+    resetBudgetForm();
+    renderBudgetCards();
+  } catch {
+    rollbackRuntimeData(STORAGE_KEYS.budgets, previousBudgets);
+    rollbackRuntimeData(STORAGE_KEYS.notifications, previousNotifications);
+    showSaveError();
+  }
 }
 
 function editBudget(id) {
@@ -129,14 +132,27 @@ function editBudget(id) {
   document.getElementById('budgetPeriod').value = budget.period;
   document.getElementById('budgetModalTitle').textContent = 'Edit Budget';
 
-  const modal = new bootstrap.Modal(document.getElementById('budgetModal'));
+  const modalElement = document.getElementById('budgetModal');
+  const modal = new bootstrap.Modal(modalElement);
   modal.show();
 }
 
-function deleteBudget(id) {
-  if (!confirm('Delete this budget?')) return;
+async function deleteBudget(id) {
+  const confirmed = await showConfirmation('Are you sure you want to delete this budget?');
+  if (!confirmed) return;
+  
+  const previousBudgets = getBudgets();
+  const previousNotifications = getNotifications();
   const updatedBudgets = getBudgets().filter(item => item.id !== id);
-  setData(STORAGE_KEYS.budgets, updatedBudgets);
-  addNotification('Budget deleted successfully.');
-  renderBudgetCards();
+  syncRuntimeData(STORAGE_KEYS.budgets, updatedBudgets);
+
+  try {
+    await setData(STORAGE_KEYS.budgets, updatedBudgets);
+    addNotification('Budget deleted successfully.');
+    renderBudgetCards();
+  } catch {
+    rollbackRuntimeData(STORAGE_KEYS.budgets, previousBudgets);
+    rollbackRuntimeData(STORAGE_KEYS.notifications, previousNotifications);
+    showSaveError();
+  }
 }

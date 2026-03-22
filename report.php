@@ -1,27 +1,34 @@
+﻿<?php
+require_once __DIR__ . '/includes/functions.php';
+require_login();
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FinTrack - Report</title>
+  <link rel="icon" type="image/svg+xml" href="images/fintrack-favicon.svg">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="css/style.css" />
 </head>
-<body data-page="report">
+<body data-page="report" data-user-id="<?= (int)$_SESSION['user_id'] ?>">
   <nav class="navbar navbar-expand-lg sticky-top app-navbar">
     <div class="container">
-      <a class="navbar-brand fw-bold" href="index.html"><i class="bi bi-wallet2 me-2"></i>FinTrack</a>
+      <a class="navbar-brand fw-bold" href="dashboard.php"><img src="images/fintrack-favicon.svg" alt="FinTrack" class="app-brand-icon me-2">FinTrack</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="mainNav">
         <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
-          <li class="nav-item"><a class="nav-link" href="index.html">Dashboard</a></li>
-          <li class="nav-item"><a class="nav-link" href="expenses.html">Expenses</a></li>
-          <li class="nav-item"><a class="nav-link" href="categories.html">Categories</a></li>
-          <li class="nav-item"><a class="nav-link" href="budget.html">Budget</a></li>
-          <li class="nav-item"><a class="nav-link active" href="report.html">Report</a></li>
+          <li class="nav-item"><a class="nav-link" href="dashboard.php">Dashboard</a></li>
+          <li class="nav-item"><a class="nav-link" href="expenses.php">Expenses</a></li>
+          <li class="nav-item"><a class="nav-link" href="categories.php">Categories</a></li>
+          <li class="nav-item"><a class="nav-link" href="budget.php">Budget</a></li>
+          <li class="nav-item"><a class="nav-link active" href="report.php">Report</a></li>
+          <li class="nav-item"><a class="nav-link" href="contact.php">Contact</a></li>
+          <li class="nav-item"><a class="nav-link" href="auth/logout.php">Logout</a></li>
           <li class="nav-item dropdown">
             <button class="btn btn-icon position-relative" data-bs-toggle="dropdown" type="button">
               <i class="bi bi-bell"></i>
@@ -103,7 +110,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="js/data.js"></script>
   <script src="js/common.js"></script>
   <script src="js/dashboard.js"></script>
   <script src="js/expenses.js"></script>
@@ -113,3 +119,4 @@
   <script src="js/app.js"></script>
 </body>
 </html>
+

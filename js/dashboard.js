@@ -14,6 +14,9 @@ function renderDashboardPage() {
   document.getElementById('dashboardTransactionCount').textContent = summary.count;
   document.getElementById('dashboardAverageExpense').textContent = formatCurrency(summary.average);
 
+  // Check for exceeded budgets and add notifications
+  checkAndNotifyBudgetExceeded();
+
   // Show charts and recent activity
   renderDashboardCharts();
   renderRecentActivity();

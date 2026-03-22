@@ -1,11 +1,12 @@
 // Main entry point for the app
 // This file starts the app and loads the correct page
 
-// Set up initial data in localStorage if not already present
-initializeData();
-
 // Wait until the page is fully loaded
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  await initializeData();
+
+  bindPageTransitions();
+
   // Apply the saved theme (dark/light)
   applySavedTheme();
   // Set up global event listeners (like theme toggle)

@@ -1,5 +1,18 @@
 // Categories page - handles category features
 
+function showCategoryActionMessage(text, type = 'warning') {
+  const messageBox = document.getElementById('categoryActionMessage');
+  if (!messageBox) return;
+
+  messageBox.className = `alert alert-${type}`;
+  messageBox.textContent = text;
+
+  window.setTimeout(() => {
+    messageBox.className = 'alert d-none';
+    messageBox.textContent = '';
+  }, 3500);
+}
+
 // Show the categories page and set up event listeners
 function renderCategoriesPage() {
   renderCategoryTable(); // Show all categories
@@ -65,7 +78,7 @@ function resetCategoryForm() {
   document.getElementById('categoryModalTitle').textContent = 'Add Category';
 }
 
-function saveCategory(event) {
+async function saveCategory(event) {
   event.preventDefault();
 
   const id = Number(document.getElementById('categoryId').value);
@@ -89,12 +102,22 @@ function saveCategory(event) {
     ? categories.map(item => item.id === id ? categoryData : item)
     : [...categories, categoryData];
 
-  setData(STORAGE_KEYS.categories, updatedCategories);
-  addNotification(id ? 'Category updated successfully.' : 'New category added successfully.');
-  bootstrap.Modal.getInstance(document.getElementById('categoryModal')).hide();
-  resetCategoryForm();
-  renderCategoryTable();
-  updateTopCategory();
+  const previousCategories = getCategories();
+  const previousNotifications = getNotifications();
+  syncRuntimeData(STORAGE_KEYS.categories, updatedCategories);
+
+  try {
+    await setData(STORAGE_KEYS.categories, updatedCategories);
+    addNotification(id ? 'Category updated successfully.' : 'New category added successfully.');
+    hideModalSafely('categoryModal');
+    resetCategoryForm();
+    renderCategoryTable();
+    updateTopCategory();
+  } catch (error) {
+    rollbackRuntimeData(STORAGE_KEYS.categories, previousCategories);
+    rollbackRuntimeData(STORAGE_KEYS.notifications, previousNotifications);
+    showSaveError();
+  }
 }
 
 function editCategory(id) {
@@ -106,26 +129,44 @@ function editCategory(id) {
   document.getElementById('categoryDescription').value = category.description;
   document.getElementById('categoryModalTitle').textContent = 'Edit Category';
 
-  const modal = new bootstrap.Modal(document.getElementById('categoryModal'));
+  const modalElement = document.getElementById('categoryModal');
+  const modal = new bootstrap.Modal(modalElement);
   modal.show();
 }
 
-function deleteCategory(id) {
+async function deleteCategory(id) {
   const category = getCategories().find(item => item.id === id);
   if (!category) return;
 
   const hasExpenses = getExpenses().some(item => item.category === category.name);
   if (hasExpenses) {
-    alert('This category is used in expenses. Delete related expenses first.');
+    showCategoryActionMessage('Cannot delete category because it is used in expenses. Delete related expenses first.', 'warning');
+    addNotification('Cannot delete category because it is used in expenses. Delete related expenses first.');
+    renderNotifications();
     return;
   }
 
-  if (!confirm('Delete this category?')) return;
+  const confirmed = await showConfirmation('Are you sure you want to delete this category?');
+  if (!confirmed) return;
+
+  const previousCategories = getCategories();
+  const previousBudgets = getBudgets();
+  const previousNotifications = getNotifications();
   const updatedCategories = getCategories().filter(item => item.id !== id);
   const updatedBudgets = getBudgets().filter(item => item.category !== category.name);
-  setData(STORAGE_KEYS.categories, updatedCategories);
-  setData(STORAGE_KEYS.budgets, updatedBudgets);
-  addNotification('Category deleted successfully.');
-  renderCategoryTable();
-  updateTopCategory();
+  syncRuntimeData(STORAGE_KEYS.categories, updatedCategories);
+  syncRuntimeData(STORAGE_KEYS.budgets, updatedBudgets);
+
+  try {
+    await setData(STORAGE_KEYS.categories, updatedCategories);
+    await setData(STORAGE_KEYS.budgets, updatedBudgets);
+    addNotification('Category deleted successfully.');
+    renderCategoryTable();
+    updateTopCategory();
+  } catch (error) {
+    rollbackRuntimeData(STORAGE_KEYS.categories, previousCategories);
+    rollbackRuntimeData(STORAGE_KEYS.budgets, previousBudgets);
+    rollbackRuntimeData(STORAGE_KEYS.notifications, previousNotifications);
+    showSaveError();
+  }
 }

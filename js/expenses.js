@@ -1,20 +1,39 @@
 // Expenses page - handles expense features
 
+const EXPENSE_SORTERS = {
+  newest: (a, b) => new Date(b.date) - new Date(a.date),
+  oldest: (a, b) => new Date(a.date) - new Date(b.date),
+  amountHigh: (a, b) => b.amount - a.amount,
+  amountLow: (a, b) => a.amount - b.amount
+};
+
 // Show the expenses page and set up event listeners
 function renderExpensesPage() {
-  populateCategoryOptions(); // Fill category dropdown
-  renderExpenseTable(); // Show all expenses
+  populateCategoryOptions();
+  renderExpenseTable();
 
-  // When user types in search, update table
-  document.getElementById('expenseSearch').addEventListener('input', renderExpenseTable);
-  // When user changes category filter, update table
-  document.getElementById('expenseCategoryFilter').addEventListener('change', renderExpenseTable);
-  // When user changes sort option, update table
-  document.getElementById('expenseSort').addEventListener('change', renderExpenseTable);
-  // When user clicks to add new expense, reset form
-  document.getElementById('openExpenseModalBtn').addEventListener('click', resetExpenseForm);
-  // When user submits expense form, save expense
-  document.getElementById('expenseForm').addEventListener('submit', saveExpense);
+  document.getElementById('expenseSearch')?.addEventListener('input', renderExpenseTable);
+  document.getElementById('expenseCategoryFilter')?.addEventListener('change', renderExpenseTable);
+  document.getElementById('expenseSort')?.addEventListener('change', renderExpenseTable);
+  document.getElementById('openExpenseModalBtn')?.addEventListener('click', resetExpenseForm);
+  document.getElementById('expenseForm')?.addEventListener('submit', saveExpense);
+  document.getElementById('expenseCloseTopBtn')?.addEventListener('click', () => hideModalSafely('expenseModal'));
+  document.getElementById('expenseCloseFooterBtn')?.addEventListener('click', () => hideModalSafely('expenseModal'));
+}
+
+function getExpenseFormData() {
+  return {
+    id: Number(document.getElementById('expenseId').value),
+    title: document.getElementById('expenseTitle').value.trim(),
+    amount: Number(document.getElementById('expenseAmount').value),
+    category: document.getElementById('expenseCategory').value,
+    date: document.getElementById('expenseDate').value,
+    note: document.getElementById('expenseNote').value.trim()
+  };
+}
+
+function isValidExpenseData(expense) {
+  return Boolean(expense.title && expense.amount > 0 && expense.category && expense.date);
 }
 
 // Get expenses filtered by search, category, and sort
@@ -23,19 +42,14 @@ function getFilteredExpenses() {
   const category = document.getElementById('expenseCategoryFilter')?.value || 'all';
   const sort = document.getElementById('expenseSort')?.value || 'newest';
 
-  let expenses = [...getExpenses()].filter(item => {
-    const matchesSearch = item.title.toLowerCase().includes(search) || item.note.toLowerCase().includes(search);
+  const expenses = getExpenses().filter(item => {
+    const note = (item.note || '').toLowerCase();
+    const matchesSearch = item.title.toLowerCase().includes(search) || note.includes(search);
     const matchesCategory = category === 'all' || item.category === category;
     return matchesSearch && matchesCategory;
   });
 
-  // Sort expenses
-  if (sort === 'newest') expenses.sort((a, b) => new Date(b.date) - new Date(a.date));
-  if (sort === 'oldest') expenses.sort((a, b) => new Date(a.date) - new Date(b.date));
-  if (sort === 'amountHigh') expenses.sort((a, b) => b.amount - a.amount);
-  if (sort === 'amountLow') expenses.sort((a, b) => a.amount - b.amount);
-
-  return expenses;
+  return expenses.sort(EXPENSE_SORTERS[sort] || EXPENSE_SORTERS.newest);
 }
 
 // Show all expenses in a table
@@ -72,33 +86,42 @@ function resetExpenseForm() {
   document.getElementById('expenseModalTitle').textContent = 'Add Expense';
 }
 
-function saveExpense(event) {
+async function saveExpense(event) {
   event.preventDefault();
 
-  const id = Number(document.getElementById('expenseId').value);
-  const title = document.getElementById('expenseTitle').value.trim();
-  const amount = Number(document.getElementById('expenseAmount').value);
-  const category = document.getElementById('expenseCategory').value;
-  const date = document.getElementById('expenseDate').value;
-  const note = document.getElementById('expenseNote').value.trim();
+  const expenseData = getExpenseFormData();
 
-  if (!title || !amount || amount <= 0 || !category || !date) {
+  if (!isValidExpenseData(expenseData)) {
     alert('Please enter valid expense details.');
     return;
   }
 
   const expenses = getExpenses();
-  const expenseData = { id: id || getNextId(expenses), title, amount, category, date, note };
+  const nextExpense = { ...expenseData, id: expenseData.id || getNextId(expenses) };
 
-  const updatedExpenses = id
-    ? expenses.map(item => item.id === id ? expenseData : item)
-    : [...expenses, expenseData];
+  const updatedExpenses = expenseData.id
+    ? expenses.map(item => item.id === expenseData.id ? nextExpense : item)
+    : [...expenses, nextExpense];
 
-  setData(STORAGE_KEYS.expenses, updatedExpenses);
-  addNotification(id ? 'Expense updated successfully.' : 'New expense added successfully.');
-  bootstrap.Modal.getInstance(document.getElementById('expenseModal')).hide();
-  resetExpenseForm();
-  renderExpenseTable();
+  const previousExpenses = getExpenses();
+  const previousNotifications = getNotifications();
+  syncRuntimeData(STORAGE_KEYS.expenses, updatedExpenses);
+
+  try {
+    await setData(STORAGE_KEYS.expenses, updatedExpenses);
+    addNotification(expenseData.id ? 'Expense updated successfully.' : 'New expense added successfully.');
+
+    await initializeData();
+    checkAndNotifyBudgetExceeded();
+
+    hideModalSafely('expenseModal');
+    resetExpenseForm();
+    renderExpenseTable();
+  } catch {
+    rollbackRuntimeData(STORAGE_KEYS.expenses, previousExpenses);
+    rollbackRuntimeData(STORAGE_KEYS.notifications, previousNotifications);
+    showSaveError();
+  }
 }
 
 function editExpense(id) {
@@ -113,15 +136,28 @@ function editExpense(id) {
   document.getElementById('expenseNote').value = expense.note;
   document.getElementById('expenseModalTitle').textContent = 'Edit Expense';
 
-  const modal = new bootstrap.Modal(document.getElementById('expenseModal'));
+  const modalElement = document.getElementById('expenseModal');
+  const modal = new bootstrap.Modal(modalElement);
   modal.show();
 }
 
-function deleteExpense(id) {
-  if (!confirm('Delete this expense?')) return;
+async function deleteExpense(id) {
+  const confirmed = await showConfirmation('Are you sure you want to delete this expense?');
+  if (!confirmed) return;
 
+  const previousExpenses = getExpenses();
+  const previousNotifications = getNotifications();
   const updatedExpenses = getExpenses().filter(item => item.id !== id);
-  setData(STORAGE_KEYS.expenses, updatedExpenses);
-  addNotification('Expense deleted successfully.');
-  renderExpenseTable();
+  syncRuntimeData(STORAGE_KEYS.expenses, updatedExpenses);
+
+  try {
+    await setData(STORAGE_KEYS.expenses, updatedExpenses);
+    addNotification('Expense deleted successfully.');
+    checkAndNotifyBudgetExceeded();
+    renderExpenseTable();
+  } catch {
+    rollbackRuntimeData(STORAGE_KEYS.expenses, previousExpenses);
+    rollbackRuntimeData(STORAGE_KEYS.notifications, previousNotifications);
+    showSaveError();
+  }
 }

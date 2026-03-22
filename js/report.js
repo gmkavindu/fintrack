@@ -3,11 +3,39 @@
 let reportCategoryChartInstance;
 let reportTrendChartInstance;
 
+function getHighestCategory(categoryTotals) {
+  return Object.entries(categoryTotals).sort((a, b) => b[1] - a[1])[0]?.[0] || '-';
+}
+
+function getReportCards() {
+  const expenses = getExpenses();
+  const budgets = getBudgets();
+  const categoryTotals = getCategoryTotals();
+  const totalExpenses = expenses.reduce((sum, item) => sum + Number(item.amount), 0);
+  const totalBudget = budgets.reduce((sum, item) => sum + Number(item.limit), 0);
+
+  return [
+    { label: 'Total Expenses', value: formatCurrency(totalExpenses) },
+    { label: 'Remaining', value: formatCurrency(totalBudget - totalExpenses) },
+    { label: 'Average Spending', value: formatCurrency(expenses.length ? totalExpenses / expenses.length : 0) },
+    { label: 'Budget', value: formatCurrency(totalBudget) },
+    { label: 'Transactions', value: expenses.length },
+    { label: 'Highest Category', value: getHighestCategory(categoryTotals) }
+  ];
+}
+
+function getReportStatus(spending, budgetValue) {
+  if (!budgetValue) return { status: 'No Budget', badgeClass: 'text-bg-secondary' };
+  if (spending >= budgetValue) return { status: 'Exceeded', badgeClass: 'text-bg-danger' };
+  if (spending >= budgetValue * 0.8) return { status: 'Warning', badgeClass: 'text-bg-warning' };
+  return { status: 'On Track', badgeClass: 'text-bg-success' };
+}
+
 // Show the report page and set up event listeners
 function renderReportPage() {
-  renderReportSummaryCards(); // Show summary cards
-  renderReportCharts(); // Show charts
-  renderReportTable(); // Show table
+  renderReportSummaryCards();
+  renderReportCharts();
+  renderReportTable();
 }
 
 // Show summary cards for report
@@ -15,27 +43,7 @@ function renderReportSummaryCards() {
   const container = document.getElementById('reportSummaryCards');
   if (!container) return;
 
-  const expenses = getExpenses();
-  const budgets = getBudgets();
-  const totals = getCategoryTotals();
-  const totalExpenses = expenses.reduce((sum, item) => sum + Number(item.amount), 0);
-  const totalBudget = budgets.reduce((sum, item) => sum + Number(item.limit), 0);
-  const remaining = totalBudget - totalExpenses;
-  const averageDaily = expenses.length ? totalExpenses / expenses.length : 0;
-  const highestCategory = Object.entries(totals).sort((a, b) => b[1] - a[1])[0]?.[0] || '-';
-
-  // Cards to show
-  const cards = [
-    { label: 'Total Expenses', value: formatCurrency(totalExpenses) },
-    { label: 'Remaining', value: formatCurrency(remaining) },
-    { label: 'Average Spending', value: formatCurrency(averageDaily) },
-    { label: 'Budget', value: formatCurrency(totalBudget) },
-    { label: 'Transactions', value: expenses.length },
-    { label: 'Highest Category', value: highestCategory }
-  ];
-
-  // Show each card
-  container.innerHTML = cards.map(card => `
+  container.innerHTML = getReportCards().map(card => `
     <div class="col-md-4">
       <div class="card app-card h-100">
         <div class="card-body">
@@ -91,21 +99,7 @@ function renderReportTable() {
     const budget = budgets.find(item => item.category === category.name);
     const budgetValue = budget ? Number(budget.limit) : 0;
     const remaining = budgetValue - spending;
-    let status = 'No Budget';
-    let badgeClass = 'text-bg-secondary';
-
-    if (budget) {
-      if (spending >= budgetValue) {
-        status = 'Exceeded';
-        badgeClass = 'text-bg-danger';
-      } else if (spending >= budgetValue * 0.8) {
-        status = 'Warning';
-        badgeClass = 'text-bg-warning';
-      } else {
-        status = 'On Track';
-        badgeClass = 'text-bg-success';
-      }
-    }
+    const { status, badgeClass } = getReportStatus(spending, budgetValue);
 
     return `
       <tr>
