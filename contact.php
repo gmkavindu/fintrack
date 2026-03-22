@@ -1,55 +1,35 @@
 <?php
-/**
- * CONTACT FORM PAGE (contact.php)
- * 
- * Purpose: Allow users and visitors to send messages/feedback to the app
- * 
- * Features:
- * - Form for: name, email, message
- * - Validates all inputs
- * - Stores messages in 'messages' database table
- * - Shows success confirmation
- * - Accessible to both logged-in users and visitors
- */
+// Contact form handler + page.
 
 declare(strict_types=1);
 
-// Load helper functions and database connection
 require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/db.php';
 
-// Initialize variables for form fields
 $name = '';
 $email = '';
 $message = '';
-$errors = [];      // Array to store validation errors
-$success = '';     // Success message after submission
+$errors = [];
+$success = '';
 
-// Check if form was submitted via POST (user clicked "Send Message" button)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Get and clean form inputs
     $name = clean_input($_POST['name'] ?? '');
     $email = clean_input($_POST['email'] ?? '');
     $message = clean_input($_POST['message'] ?? '');
 
-    // VALIDATION 1: Check if name is provided
     if ($name === '') {
         $errors[] = 'Name is required.';
     }
     
-    // VALIDATION 2: Check if email is valid format
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $errors[] = 'Valid email is required.';
     }
     
-    // VALIDATION 3: Check if message is provided
     if ($message === '') {
         $errors[] = 'Message is required.';
     }
 
-    // If all validations pass, save message to database
     if (!$errors) {
-        // Insert new message into 'messages' table
         $stmt = $pdo->prepare('INSERT INTO messages (name, email, message) VALUES (:name, :email, :message)');
         $stmt->execute([
             'name' => $name,
@@ -57,7 +37,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'message' => $message,
         ]);
 
-        // Show success message and clear form fields
         $success = 'Your message has been sent successfully.';
         $name = '';
         $email = '';
