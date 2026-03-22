@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once __DIR__ . '/includes/functions.php';
 require_login();
 ?>
@@ -9,14 +9,16 @@ require_login();
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FinTrack - Categories</title>
   <link rel="icon" type="image/svg+xml" href="images/fintrack-favicon.svg">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body data-page="categories" data-user-id="<?= (int)$_SESSION['user_id'] ?>">
-  <nav class="navbar navbar-expand-lg sticky-top app-navbar">
+  <nav class="navbar navbar-expand-lg sticky-top app-navbar shadow-sm">
     <div class="container">
-      <a class="navbar-brand fw-bold" href="dashboard.php"><img src="images/fintrack-favicon.svg" alt="FinTrack" class="app-brand-icon me-2">FinTrack</a>
+      <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="dashboard.php"><img src="images/fintrack-favicon.svg" alt="" class="app-brand-icon" width="28" height="28">FinTrack</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -51,28 +53,36 @@ require_login();
   </nav>
 
   <main class="container py-4">
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
-      <div>
-        <h1 class="page-title mb-1">Categories</h1>
-        <p class="text-secondary mb-0">Organize your expenses into simple categories.</p>
-      </div>
-      <button class="btn btn-primary px-4" data-bs-toggle="modal" data-bs-target="#categoryModal" id="openCategoryModalBtn">
-        <i class="bi bi-plus-lg me-2"></i>Add Category
-      </button>
-    </div>
-
-    <div id="categoryActionMessage" class="alert d-none" role="alert"></div>
-
-    <div class="card app-card mb-4">
-      <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-3">
-        <input type="text" id="categorySearch" class="form-control w-auto flex-grow-1" placeholder="Search categories">
-        <div class="info-chip" id="topCategoryChip">Top spending category: -</div>
+    <div class="border-bottom border-secondary-subtle pb-4 mb-4">
+      <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+        <div>
+          <h1 class="page-title mb-2">Categories</h1>
+          <p class="text-secondary mb-0">Organize your expenses into simple categories.</p>
+        </div>
+        <button class="btn btn-primary rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#categoryModal" id="openCategoryModalBtn">
+          <i class="bi bi-plus-lg me-2"></i>Add Category
+        </button>
       </div>
     </div>
 
-    <div class="card app-card">
+    <div id="categoryActionMessage" class="alert d-none rounded-3 border-0 shadow-sm" role="alert"></div>
+
+    <div class="card app-card mb-4 border-0 shadow-sm rounded-4">
+      <div class="card-body p-4 d-flex flex-wrap justify-content-between align-items-stretch gap-3">
+        <div class="flex-grow-1" style="min-width: 200px;">
+          <label class="form-label small text-secondary mb-1">Search</label>
+          <div class="input-group">
+            <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-search text-secondary"></i></span>
+            <input type="text" id="categorySearch" class="form-control border-start-0" placeholder="Search categories">
+          </div>
+        </div>
+        <div class="info-chip align-self-end flex-shrink-0" id="topCategoryChip"><i class="bi bi-bar-chart-line-fill me-2 text-primary"></i>Top spending category: -</div>
+      </div>
+    </div>
+
+    <div class="card app-card border-0 shadow-sm rounded-4 overflow-hidden">
       <div class="table-responsive">
-        <table class="table align-middle mb-0">
+        <table class="table table-hover align-middle mb-0">
           <thead>
             <tr>
               <th>Name</th>
@@ -90,10 +100,10 @@ require_login();
 
   <div class="modal fade" id="categoryModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
+      <div class="modal-content rounded-4 border-0 shadow">
         <form id="categoryForm">
-          <div class="modal-header">
-            <h5 class="modal-title" id="categoryModalTitle">Add Category</h5>
+          <div class="modal-header border-0 pb-0">
+            <h5 class="modal-title fw-semibold" id="categoryModalTitle">Add Category</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
@@ -107,9 +117,9 @@ require_login();
               <textarea id="categoryDescription" class="form-control" rows="3" required></textarea>
             </div>
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="submit" class="btn btn-primary">Save Category</button>
+          <div class="modal-footer border-0 pt-0">
+            <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary rounded-pill px-4">Save Category</button>
           </div>
         </form>
       </div>
@@ -118,17 +128,17 @@ require_login();
 
   <div class="modal fade" id="confirmationModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Confirm Delete</h5>
+      <div class="modal-content rounded-4 border-0 shadow">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-semibold">Confirm Delete</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
           <p id="confirmMessage">Are you sure?</p>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" id="cancelBtn" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-danger" id="confirmBtn">Delete</button>
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-outline-secondary rounded-pill" id="cancelBtn" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-danger rounded-pill px-4" id="confirmBtn">Delete</button>
         </div>
       </div>
     </div>
@@ -140,14 +150,10 @@ require_login();
     </div>
   </footer>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="js/common.js"></script>
-  <script src="js/dashboard.js"></script>
-  <script src="js/expenses.js"></script>
-  <script src="js/categories.js"></script>
-  <script src="js/budget.js"></script>
-  <script src="js/report.js"></script>
-  <script src="js/app.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script defer src="js/common.js"></script>
+  <script defer src="js/categories.js"></script>
+  <script defer src="js/app.js"></script>
 </body>
 </html>
 

@@ -34,7 +34,15 @@ function renderBudgetCards() {
   const budgets = getBudgets().filter(item => item.category.toLowerCase().includes(search));
 
   if (!budgets.length) {
-    container.innerHTML = '<div class="col-12"><div class="card app-card"><div class="empty-state">No budgets found.</div></div></div>';
+    container.innerHTML = `
+      <div class="col-12">
+        <div class="card app-card border-0 shadow-sm rounded-4">
+          <div class="empty-state py-5">
+            <i class="bi bi-piggy-bank display-4 text-secondary mb-3 d-block opacity-50"></i>
+            <p class="mb-0 text-secondary">No budgets found. Add one to track spending limits.</p>
+          </div>
+        </div>
+      </div>`;
     return;
   }
 
@@ -50,16 +58,16 @@ function renderBudgetCards() {
 
     return `
       <div class="col-lg-6">
-        <div class="card app-card h-100">
+        <div class="card app-card h-100 border-0 shadow-sm rounded-4">
           <div class="card-body p-4">
             <div class="d-flex justify-content-between align-items-start mb-3">
               <div>
-                <h5 class="mb-1">${item.category}</h5>
-                <small class="text-secondary">${item.period} Budget</small>
+                <h5 class="mb-1 fw-semibold">${item.category}</h5>
+                <span class="badge rounded-pill border border-secondary-subtle text-secondary fw-normal">${item.period} budget</span>
               </div>
-              <div>
-                <button class="btn btn-sm btn-outline-primary me-2" onclick="editBudget(${item.id})"><i class="bi bi-pencil"></i></button>
-                <button class="btn btn-sm btn-outline-danger" onclick="deleteBudget(${item.id})"><i class="bi bi-trash"></i></button>
+              <div class="btn-group" role="group">
+                <button type="button" class="btn btn-sm btn-outline-primary rounded-start-pill" onclick="editBudget(${item.id})" title="Edit"><i class="bi bi-pencil"></i></button>
+                <button type="button" class="btn btn-sm btn-outline-danger rounded-end-pill" onclick="deleteBudget(${item.id})" title="Delete"><i class="bi bi-trash"></i></button>
               </div>
             </div>
             <div class="mb-2">Budget: <strong>${formatCurrency(item.limit)}</strong></div>

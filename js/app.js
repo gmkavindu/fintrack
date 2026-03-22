@@ -3,7 +3,12 @@
 
 // Wait until the page is fully loaded
 document.addEventListener('DOMContentLoaded', async () => {
-  await initializeData();
+  const page = document.body.dataset.page || '';
+  const pagesUsingApiData = new Set(['dashboard', 'expenses', 'categories', 'budget', 'report']);
+
+  if (pagesUsingApiData.has(page)) {
+    await initializeData();
+  }
 
   bindPageTransitions();
 
@@ -13,9 +18,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   bindGlobalEvents();
   // Show notifications if any
   renderNotifications();
-
-  // Get which page to show from the HTML
-  const page = document.body.dataset.page;
 
   // Show the correct page based on the value
   if (page === 'dashboard') renderDashboardPage();

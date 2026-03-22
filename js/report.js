@@ -3,6 +3,12 @@
 let reportCategoryChartInstance;
 let reportTrendChartInstance;
 
+function getReportCategorySpent(categoryName) {
+  return getExpenses()
+    .filter(item => item.category === categoryName)
+    .reduce((sum, item) => sum + Number(item.amount), 0);
+}
+
 function getHighestCategory(categoryTotals) {
   return Object.entries(categoryTotals).sort((a, b) => b[1] - a[1])[0]?.[0] || '-';
 }
@@ -45,10 +51,10 @@ function renderReportSummaryCards() {
 
   container.innerHTML = getReportCards().map(card => `
     <div class="col-md-4">
-      <div class="card app-card h-100">
-        <div class="card-body">
-          <p class="text-secondary mb-2">${card.label}</p>
-          <h5 class="mb-0">${card.value}</h5>
+      <div class="card app-card h-100 border-0 shadow-sm rounded-4">
+        <div class="card-body p-4">
+          <p class="text-secondary small text-uppercase fw-semibold mb-2 mb-lg-3">${card.label}</p>
+          <p class="mb-0 fs-4 fw-bold text-break">${card.value}</p>
         </div>
       </div>
     </div>
@@ -95,7 +101,7 @@ function renderReportTable() {
   const budgets = getBudgets();
 
   body.innerHTML = categories.map(category => {
-    const spending = getBudgetSpent(category.name);
+    const spending = getReportCategorySpent(category.name);
     const budget = budgets.find(item => item.category === category.name);
     const budgetValue = budget ? Number(budget.limit) : 0;
     const remaining = budgetValue - spending;

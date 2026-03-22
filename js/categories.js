@@ -4,11 +4,11 @@ function showCategoryActionMessage(text, type = 'warning') {
   const messageBox = document.getElementById('categoryActionMessage');
   if (!messageBox) return;
 
-  messageBox.className = `alert alert-${type}`;
+  messageBox.className = `alert alert-${type} rounded-3 border-0 shadow-sm`;
   messageBox.textContent = text;
 
   window.setTimeout(() => {
-    messageBox.className = 'alert d-none';
+    messageBox.className = 'alert d-none rounded-3 border-0 shadow-sm';
     messageBox.textContent = '';
   }, 3500);
 }
@@ -69,7 +69,9 @@ function updateTopCategory() {
 
   const totals = getCategoryTotals();
   const entries = Object.entries(totals).sort((a, b) => b[1] - a[1]);
-  chip.textContent = entries.length ? `Top spending category: ${entries[0][0]}` : 'Top spending category: -';
+  chip.innerHTML = entries.length
+    ? `<i class="bi bi-bar-chart-line-fill me-2 text-primary"></i>Top spending category: ${entries[0][0]}`
+    : '<i class="bi bi-bar-chart-line-fill me-2 text-primary"></i>Top spending category: -';
 }
 
 function resetCategoryForm() {
